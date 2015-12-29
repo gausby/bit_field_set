@@ -1,5 +1,8 @@
 # Bit Field Set
 
+[![Hex.pm](https://img.shields.io/hexpm/l/bit_field_set.svg "Apache 2.0 Licensed")](https://github.com/gausby/bit_field_set/blob/master/LICENSE)
+[![Hex version](https://img.shields.io/hexpm/v/bit_field_set.svg "Hex version")](https://hex.pm/packages/bit_field_set)
+
 Store and manipulate a set of bit flags, mostly used for syncing the state over the wire between peers in a peer to peer network, such as BitTorrent.
 
 
