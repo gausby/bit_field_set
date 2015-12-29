@@ -12,10 +12,10 @@ bitfield = BitFieldSet.new(<<0b00110001>>, "my_info_hash")
 
 # set the first bit
 bitfield = BitFieldSet.set(bitfield, 0)
-# => %BitFieldSet{info_hash: nil, pieces: #MapSet<[0, 2, 3, 7]>, size: 8}
+# => %BitFieldSet{info_hash: "my_info_hash", pieces: #MapSet<[0, 2, 3, 7]>, size: 8}
 
 bitfield = BitFieldSet.remove(bitfield, 3)
-# => %BitFieldSet{info_hash: nil, pieces: #MapSet<[1, 2, 7]>, size: 8}
+# => %BitFieldSet{info_hash: "my_info_hash", pieces: #MapSet<[0, 2, 7]>, size: 8}
 
 BitFieldSet.to_binary(bitfield) # => <<161>>
 ```
