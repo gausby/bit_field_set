@@ -30,7 +30,7 @@ Bit Field Set is [available in Hex](https://hex.pm/packages/bit_field_set), the 
 
 ``` elixir
 def deps do
-  [{:bit_field_set, "~> 0.0.1"}]
+  [{:bit_field_set, "~> 0.0.2"}]
 end
 ```
 
