@@ -5,6 +5,8 @@ defmodule BitFieldSet do
   Its main usecase is for BitTorrent implementations.
   """
 
+  alias __MODULE__, as: Set
+
   @opaque t :: %__MODULE__{size: pos_integer, pieces: %MapSet{map: non_neg_integer}, info_hash: any}
   defstruct(
     size: 0,
@@ -32,7 +34,7 @@ defmodule BitFieldSet do
   @spec new(pos_integer | binary, any) :: t
   def new(content, info_hash \\ nil)
   def new(content_size, info_hash) when is_number(content_size) and content_size > 0 do
-    %__MODULE__{info_hash: info_hash, size: content_size, pieces: MapSet.new}
+    %Set{info_hash: info_hash, size: content_size, pieces: MapSet.new}
   end
   def new(content, info_hash) when is_binary(content) do
     pieces = reduce_bits(content, fn
@@ -41,7 +43,7 @@ defmodule BitFieldSet do
       _, acc ->
         acc
     end)
-    %__MODULE__{info_hash: info_hash, size: bit_size(content), pieces: MapSet.new(pieces)}
+    %Set{info_hash: info_hash, size: bit_size(content), pieces: MapSet.new(pieces)}
   end
 
   # Reduce the bits in the bytes in the bit-field
@@ -76,9 +78,9 @@ defmodule BitFieldSet do
 
   """
   @spec set(t, non_neg_integer) :: t
-  def set(%__MODULE__{pieces: pieces, size: size} = state, piece)
+  def set(%Set{pieces: pieces, size: size} = state, piece)
   when is_number(piece) and piece < size do
-    %__MODULE__{state|pieces: MapSet.put(pieces, piece)}
+    %Set{state|pieces: MapSet.put(pieces, piece)}
   end
 
   @doc """
@@ -91,9 +93,9 @@ defmodule BitFieldSet do
 
   """
   @spec remove(t, non_neg_integer) :: t
-  def remove(%__MODULE__{pieces: pieces, size: size} = state, piece)
+  def remove(%Set{pieces: pieces, size: size} = state, piece)
   when is_number(piece) and piece < size do
-    %__MODULE__{state|pieces: MapSet.delete(pieces, piece)}
+    %Set{state|pieces: MapSet.delete(pieces, piece)}
   end
 
   @doc """
@@ -108,7 +110,7 @@ defmodule BitFieldSet do
 
   """
   @spec member?(t, non_neg_integer) :: boolean
-  def member?(%__MODULE__{pieces: pieces, size: size}, piece_number) when piece_number < size do
+  def member?(%Set{pieces: pieces, size: size}, piece_number) when piece_number < size do
     MapSet.member?(pieces, piece_number)
   end
 
@@ -126,7 +128,7 @@ defmodule BitFieldSet do
 
   """
   @spec equal?(t, t) :: boolean
-  def equal?(%__MODULE__{pieces: a, info_hash: info_hash}, %__MODULE__{pieces: b, info_hash: info_hash}) do
+  def equal?(%Set{pieces: a, info_hash: info_hash}, %Set{pieces: b, info_hash: info_hash}) do
     MapSet.equal?(a, b)
   end
 
@@ -143,7 +145,7 @@ defmodule BitFieldSet do
 
   """
   @spec subset?(t, t) :: boolean
-  def subset?(%__MODULE__{pieces: a, info_hash: info_hash}, %__MODULE__{pieces: b, info_hash: info_hash}) do
+  def subset?(%Set{pieces: a, info_hash: info_hash}, %Set{pieces: b, info_hash: info_hash}) do
     MapSet.subset?(a, b)
   end
 
@@ -161,7 +163,7 @@ defmodule BitFieldSet do
 
   """
   @spec disjoint?(t, t) :: boolean
-  def disjoint?(%__MODULE__{pieces: a, info_hash: info_hash}, %__MODULE__{pieces: b, info_hash: info_hash}) do
+  def disjoint?(%Set{pieces: a, info_hash: info_hash}, %Set{pieces: b, info_hash: info_hash}) do
     MapSet.disjoint?(a, b)
   end
 
@@ -176,7 +178,7 @@ defmodule BitFieldSet do
 
   """
   @spec intersection(t, t) :: MapSet.t
-  def intersection(%__MODULE__{pieces: a, info_hash: info_hash}, %__MODULE__{pieces: b, info_hash: info_hash}) do
+  def intersection(%Set{pieces: a, info_hash: info_hash}, %Set{pieces: b, info_hash: info_hash}) do
     MapSet.intersection(a, b)
   end
 
@@ -191,7 +193,7 @@ defmodule BitFieldSet do
 
   """
   @spec union(t, t) :: MapSet.t
-  def union(%__MODULE__{pieces: a, info_hash: info_hash}, %__MODULE__{pieces: b, info_hash: info_hash}) do
+  def union(%Set{pieces: a, info_hash: info_hash}, %Set{pieces: b, info_hash: info_hash}) do
     MapSet.union(a, b)
   end
 
@@ -208,7 +210,7 @@ defmodule BitFieldSet do
 
   """
   @spec difference(t, t) :: MapSet.t
-  def difference(%__MODULE__{info_hash: info_hash, pieces: a}, %__MODULE__{info_hash: info_hash, pieces: b}) do
+  def difference(%Set{info_hash: info_hash, pieces: a}, %Set{info_hash: info_hash, pieces: b}) do
     MapSet.difference(a, b)
   end
 
@@ -220,7 +222,7 @@ defmodule BitFieldSet do
 
   """
   @spec has(t) :: non_neg_integer
-  def has(%__MODULE__{pieces: pieces}) do
+  def has(%Set{pieces: pieces}) do
     MapSet.size(pieces)
   end
 
@@ -235,7 +237,7 @@ defmodule BitFieldSet do
 
   """
   @spec has_all?(t) :: boolean
-  def has_all?(%__MODULE__{pieces: pieces, size: size}) do
+  def has_all?(%Set{pieces: pieces, size: size}) do
     MapSet.size(pieces) == size
   end
 
@@ -247,7 +249,7 @@ defmodule BitFieldSet do
 
   """
   @spec to_list(t) :: [non_neg_integer]
-  def to_list(%__MODULE__{pieces: pieces}) do
+  def to_list(%Set{pieces: pieces}) do
     MapSet.to_list(pieces)
   end
 
@@ -259,7 +261,7 @@ defmodule BitFieldSet do
 
   """
   @spec to_binary(t) :: binary
-  def to_binary(%__MODULE__{size: size, pieces: pieces}) when size > 0 do
+  def to_binary(%Set{size: size, pieces: pieces}) when size > 0 do
     have = MapSet.to_list(pieces)
     bit_range = 0..(size - 1)
 
