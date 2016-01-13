@@ -68,6 +68,13 @@ defmodule BitFieldSetTest do
     assert BitFieldSet.to_binary(result) == expected
   end
 
+  test "setting all bits using set_all/1" do
+    assert (BitFieldSet.new(<<0b00000000>>) |> BitFieldSet.set_all) == BitFieldSet.new(<<255>>)
+    assert (BitFieldSet.new(<<0b11100100>>) |> BitFieldSet.set_all) == BitFieldSet.new(<<255>>)
+    result = <<255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255>>
+    assert (BitFieldSet.new(120) |> BitFieldSet.set_all) == BitFieldSet.new(result)
+  end
+
   test "removing bits" do
     bitfield =
       BitFieldSet.new(8)

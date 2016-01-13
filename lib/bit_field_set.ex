@@ -84,6 +84,19 @@ defmodule BitFieldSet do
   end
 
   @doc """
+  Set all the bits to true in the set.
+
+      iex> set = BitFieldSet.new(<<0b10100110>>)
+      iex> BitFieldSet.set_all(set) |> BitFieldSet.has_all?
+      true
+
+  """
+  @spec set_all(t) :: t
+  def set_all(%Set{size: size} = state) do
+    %Set{state|pieces: MapSet.new(0..(size - 1))}
+  end
+
+  @doc """
   Take a piece set and an index. The given index will get removed from the piece
   set and the updated piece set will get returned:
 
