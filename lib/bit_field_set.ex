@@ -249,8 +249,11 @@ defmodule BitFieldSet do
 
   """
   @spec to_list(t) :: [non_neg_integer]
-  def to_list(%Set{pieces: pieces}) do
+  def to_list(%Set{pieces: pieces, size: size}) when size <= 40 do
     MapSet.to_list(pieces)
+  end
+  def to_list(%Set{pieces: pieces}) do
+    MapSet.to_list(pieces) |> Enum.sort
   end
 
   @doc """
@@ -261,8 +264,8 @@ defmodule BitFieldSet do
 
   """
   @spec to_binary(t) :: binary
-  def to_binary(%Set{size: size, pieces: pieces}) when size > 0 do
-    have = MapSet.to_list(pieces)
+  def to_binary(%Set{size: size} = set) when size > 0 do
+    have = to_list(set)
     bit_range = 0..(size - 1)
 
     Stream.transform(bit_range, have, fn

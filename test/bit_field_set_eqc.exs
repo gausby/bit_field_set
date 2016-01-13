@@ -2,6 +2,13 @@ defmodule BitFieldSetEqc do
   use ExUnit.Case
   use EQC.ExUnit
 
+  property "converting data to a bit field set and back should yield the same" do
+    forall input <- binary(1000) do
+      result = input |> BitFieldSet.new |> BitFieldSet.to_binary
+      ensure result == input
+    end
+  end
+
   property "subsets" do
     forall {a, b, c} <- {binary(10), binary(10), binary(10)} do
       implies b != <<0::size(80)>> do
@@ -34,7 +41,7 @@ defmodule BitFieldSetEqc do
           BitFieldSet.new(a <> b)
           |> BitFieldSet.to_list
 
-        ensure MapSet.to_list(BitFieldSet.union(set_a, set_b)) == result
+        ensure Enum.sort(MapSet.to_list(BitFieldSet.union(set_a, set_b))) == result
       end
     end
   end
@@ -49,7 +56,7 @@ defmodule BitFieldSetEqc do
           BitFieldSet.new(empty <> empty <> c)
           |> BitFieldSet.to_list
 
-        ensure MapSet.to_list(BitFieldSet.intersection(set_a, set_b)) == result
+        ensure Enum.sort(MapSet.to_list(BitFieldSet.intersection(set_a, set_b))) == result
       end
     end
   end
