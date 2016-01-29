@@ -17,33 +17,49 @@ defmodule BitFieldSet do
   @doc """
   Create a new piece set given either a `size` (an integer denoting bit size)
   *or* some `content` (a binary, the size will be set from the bit size of this
-  binary), and an optional `info_hash`, used to ensure only compatible
-  bit-fields are compared.
+  binary) *and* a `size`.
 
-      iex> BitFieldSet.new(16) |> BitFieldSet.to_binary
+      iex> BitFieldSet.new!(16) |> BitFieldSet.to_binary
       <<0, 0>>
 
   The size will be taken from the input when a piece set is created with data:
 
-      iex> BitFieldSet.new(<<128, 1>>) |> BitFieldSet.to_list
+      iex> BitFieldSet.new!(<<128, 1>>, 16) |> BitFieldSet.to_list
       [0, 15]
 
-  The piece set can be given an `info_hash` as the second argument, it can be
-  anything, and it defaults to `nil`.
+  An optional `info_hash` can be given as the third argument, which will ensure
+  only compatible bit-fields are compared.
   """
-  @spec new(pos_integer | binary, any) :: t
-  def new(content, info_hash \\ nil)
-  def new(content_size, info_hash) when is_number(content_size) and content_size > 0 do
-    %Set{info_hash: info_hash, size: content_size, pieces: MapSet.new}
+  @spec new(binary, pos_integer, any) :: t
+  def new(content \\ <<>>, size, info_hash \\ nil)
+  def new(content, size, info_hash) when bit_size(content) - size < 8 do
+    pieces =
+      reduce_bits(content, fn
+        {index, 1}, acc ->
+          [index|acc]
+
+        _, acc ->
+          acc
+      end)
+
+    # check for out of bounds in least significant bit
+    case pieces do
+      [biggest|_rest] when biggest >= size ->
+        {:error, :out_of_bounds}
+
+      set ->
+        {:ok, %Set{info_hash: info_hash, size: size, pieces: MapSet.new(set)}}
+    end
   end
-  def new(content, info_hash) when is_binary(content) do
-    pieces = reduce_bits(content, fn
-      {index, 1}, acc ->
-        [index|acc]
-      _, acc ->
-        acc
-    end)
-    %Set{info_hash: info_hash, size: bit_size(content), pieces: MapSet.new(pieces)}
+  def new(_content, _size, _info_hash) do
+    {:error, :out_of_bounds}
+  end
+
+  @spec new!(binary, pos_integer, any) :: t
+  def new!(content \\ <<>>, content_size, info_hash \\ nil)
+  def new!(content, content_size, info_hash) do
+    {:ok, set} = new(content, content_size, info_hash)
+    set
   end
 
   # Reduce the bits in the bytes in the bit-field
@@ -51,7 +67,7 @@ defmodule BitFieldSet do
     do: do_reduce_bits(bytes, 0, [], fun)
 
   defp do_reduce_bits(<<>>, _index, acc, _fun),
-    do: Enum.reverse acc
+    do: acc
   defp do_reduce_bits(<<byte::integer, rest::binary>>, index, acc, fun) do
     {index, acc} =
       number_to_padded_bits(byte)
@@ -72,7 +88,7 @@ defmodule BitFieldSet do
   Take a piece set and an index. The given index will get added to the piece
   set and the updated piece set will get returned:
 
-      iex> set = BitFieldSet.new(<<0b10101000>>)
+      iex> {:ok, set} = BitFieldSet.new(<<0b10101000>>, 8)
       iex> BitFieldSet.set(set, 6) |> BitFieldSet.to_list
       [0, 2, 4, 6]
 
@@ -86,7 +102,7 @@ defmodule BitFieldSet do
   @doc """
   Set all the bits to true in the set.
 
-      iex> set = BitFieldSet.new(<<0b10100110>>)
+      iex> {:ok, set} = BitFieldSet.new(<<0b10100110>>, 8)
       iex> BitFieldSet.set_all(set) |> BitFieldSet.has_all?
       true
 
@@ -100,7 +116,7 @@ defmodule BitFieldSet do
   Take a piece set and an index. The given index will get removed from the piece
   set and the updated piece set will get returned:
 
-      iex> set = BitFieldSet.new(<<0b10101000>>)
+      iex> {:ok, set} = BitFieldSet.new(<<0b10101000>>, 8)
       iex> BitFieldSet.remove(set, 2) |> BitFieldSet.to_list
       [0, 4]
 
@@ -115,7 +131,7 @@ defmodule BitFieldSet do
   Takes a piece set and a piece number and return `true` if the given piece number
   is present in the set; `false` otherwise.
 
-      iex> set = BitFieldSet.new(<<0b10000001>>)
+      iex> {:ok, set} = BitFieldSet.new(<<0b10000001>>, 8)
       iex> BitFieldSet.member?(set, 7)
       true
       iex> BitFieldSet.member?(set, 2)
@@ -131,11 +147,11 @@ defmodule BitFieldSet do
   Takes two piece sets with the same `info_hash`, and return `true` if both sets
   contain exactly the same pieces; and `false` otherwise.
 
-      iex> a = BitFieldSet.new(<<0b10100110>>)
-      iex> b = BitFieldSet.new(<<0b10100110>>)
+      iex> {:ok, a} = BitFieldSet.new(<<0b10100110>>, 8)
+      iex> {:ok, b} = BitFieldSet.new(<<0b10100110>>, 8)
       iex> BitFieldSet.equal?(a, b)
       true
-      iex> c = BitFieldSet.new(<<0b11011011>>)
+      iex> {:ok, c} = BitFieldSet.new(<<0b11011011>>, 8)
       iex> BitFieldSet.equal?(a, c)
       false
 
@@ -149,8 +165,8 @@ defmodule BitFieldSet do
   Takes two piece sets, a and b, who has the same `info_hash`, and return `true` if
   all the members of set a are also members of set b; `false` otherwise.
 
-      iex> a = BitFieldSet.new(<<0b00000110>>)
-      iex> b = BitFieldSet.new(<<0b00101110>>)
+      iex> {:ok, a} = BitFieldSet.new(<<0b00000110>>, 8)
+      iex> {:ok, b} = BitFieldSet.new(<<0b00101110>>, 8)
       iex> BitFieldSet.subset?(a, b)
       true
       iex> BitFieldSet.subset?(b, a)
@@ -166,9 +182,9 @@ defmodule BitFieldSet do
   Takes two piece sets and return `true` if the two sets does not share any members,
   otherwise `false` will get returned.
 
-      iex> a = BitFieldSet.new(<<0b00101110>>)
-      iex> b = BitFieldSet.new(<<0b11010001>>)
-      iex> c = BitFieldSet.new(<<0b11101000>>)
+      iex> {:ok, a} = BitFieldSet.new(<<0b00101110>>, 8)
+      iex> {:ok, b} = BitFieldSet.new(<<0b11010001>>, 8)
+      iex> {:ok, c} = BitFieldSet.new(<<0b11101000>>, 8)
       iex> BitFieldSet.disjoint?(a, b)
       true
       iex> BitFieldSet.disjoint?(a, c)
@@ -184,8 +200,8 @@ defmodule BitFieldSet do
   Takes two piece sets with the same `info_hash` and return a set containing the pieces
   that belong to both sets.
 
-      iex> a = BitFieldSet.new(<<0b00101010>>)
-      iex> b = BitFieldSet.new(<<0b10110011>>)
+      iex> {:ok, a} = BitFieldSet.new(<<0b00101010>>, 8)
+      iex> {:ok, b} = BitFieldSet.new(<<0b10110011>>, 8)
       iex> BitFieldSet.intersection(a, b)
       #MapSet<[2, 6]>
 
@@ -199,8 +215,8 @@ defmodule BitFieldSet do
   Takes two piece sets with the same `info_hash` and return a set containing all
   members of both sets.
 
-      iex> a = BitFieldSet.new(<<0b00101010>>)
-      iex> b = BitFieldSet.new(<<0b10000000>>)
+      iex> {:ok, a} = BitFieldSet.new(<<0b00101010>>, 8)
+      iex> {:ok, b} = BitFieldSet.new(<<0b10000000>>, 8)
       iex> BitFieldSet.union(a, b)
       #MapSet<[0, 2, 4, 6]>
 
@@ -214,8 +230,8 @@ defmodule BitFieldSet do
   Takes two piece sets, a and b, who both has the same `info_hash`, and return a MapSet
   containing the pieces in *a* without the pieces contained in *b*.
 
-      iex> a = BitFieldSet.new(<<170>>)
-      iex> b = BitFieldSet.new(<<85>>)
+      iex> {:ok, a} = BitFieldSet.new(<<170>>, 8)
+      iex> {:ok, b} = BitFieldSet.new(<<85>>, 8)
       iex> BitFieldSet.difference(a, b)
       #MapSet<[0, 2, 4, 6]>
       iex> BitFieldSet.difference(b, a)
@@ -230,7 +246,7 @@ defmodule BitFieldSet do
   @doc """
   Take a piece set and return the number of its available pieces.
 
-      iex> BitFieldSet.new(<<0b10101010>>) |> BitFieldSet.has
+      iex> BitFieldSet.new!(<<0b10101010>>, 8) |> BitFieldSet.has
       4
 
   """
@@ -243,9 +259,9 @@ defmodule BitFieldSet do
   Take a piece set and return `true` if the set contains all the pieces,
   and `false` otherwise.
 
-      iex> BitFieldSet.new(<<0b10011010>>) |> BitFieldSet.has_all?
+      iex> BitFieldSet.new!(<<0b10011010>>, 8) |> BitFieldSet.has_all?
       false
-      iex> BitFieldSet.new(<<0b11111111>>) |> BitFieldSet.has_all?
+      iex> BitFieldSet.new!(<<0b11111111>>, 8) |> BitFieldSet.has_all?
       true
 
   """
@@ -257,7 +273,7 @@ defmodule BitFieldSet do
   @doc """
   Take a piece set and return the available pieces as a list.
 
-      iex> BitFieldSet.new(<<0b10011010>>) |> BitFieldSet.to_list
+      iex> BitFieldSet.new!(<<0b10011010>>, 8) |> BitFieldSet.to_list
       [0, 3, 4, 6]
 
   """
@@ -272,7 +288,7 @@ defmodule BitFieldSet do
   @doc """
   Take a piece set and return the bit field representation of the set.
 
-      iex> BitFieldSet.new(<<0b10011010, 0b10000000>>) |> BitFieldSet.to_binary
+      iex> BitFieldSet.new!(<<0b10011010, 0b10000000>>, 16) |> BitFieldSet.to_binary
       <<154, 128>>
 
   """

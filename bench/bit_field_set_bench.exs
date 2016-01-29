@@ -7,16 +7,16 @@ defmodule BitFieldSetBench do
 
   # all bits set to 0
   bench "empty-bitfield" do
-    BitFieldSet.new(@empty)
+    BitFieldSet.new!(@empty, 8000)
   end
 
   # every other bit set to 1
   bench "half-full-bitfield" do
-    BitFieldSet.new(@full)
+    BitFieldSet.new!(@full, 8000)
   end
 
   # every bit set to 1
   bench "full-bitfield" do
-    BitFieldSet.new(@full)
+    BitFieldSet.new!(@full, 8000)
   end
 end
