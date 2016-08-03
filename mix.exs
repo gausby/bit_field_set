@@ -33,7 +33,8 @@ defmodule BitFieldSet.Mixfile do
   end
 
   defp deps do
-    [{:eqc_ex, "~> 1.3.0", only: [:test, :dev]},
+    [{:ex_doc, ">= 0.0.0", only: :dev},
+     {:eqc_ex, "~> 1.3.0", only: [:test, :dev]},
      {:benchfella, "~> 0.3.2", only: :dev}]
   end
 end
