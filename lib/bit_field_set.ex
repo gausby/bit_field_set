@@ -295,7 +295,7 @@ defmodule BitFieldSet do
   @spec to_binary(t) :: binary
   def to_binary(%Set{size: size} = set) when size > 0 do
     have = to_list(set)
-    bit_range = 0..(size - 1)
+    bit_range = 0..(div(size, 8) + (if rem(size, 8) == 0, do: 0, else: 1)) * 8
 
     Stream.transform(bit_range, have, fn
       # is the same

@@ -50,6 +50,13 @@ defmodule BitFieldSetTest do
       |> BitFieldSet.to_binary
     expected = <<1, 255, 74>>
     assert result == expected
+
+    result =
+      BitFieldSet.new!(22) |> BitFieldSet.set(21) |> BitFieldSet.to_binary
+    expected = <<0b00000000,
+                 0b00000000,
+                 0b00000100>>
+    assert result == expected
   end
 
   test "getting bits" do

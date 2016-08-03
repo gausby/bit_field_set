@@ -1,2 +1,2 @@
-%{"benchfella": {:hex, :benchfella, "0.3.1"},
-  "eqc_ex": {:hex, :eqc_ex, "1.2.4"}}
+%{"benchfella": {:hex, :benchfella, "0.3.2", "b9648e77fa8d8b8b9fe8f54293bee63f7de03909b3af6ab22a0e546716a396fb", [:mix], []},
+  "eqc_ex": {:hex, :eqc_ex, "1.3.0", "04dc4481319d2e2ff1ce136507078cdbaf5a124d6a05ce32d5d642db28b053e4", [:mix], []}}

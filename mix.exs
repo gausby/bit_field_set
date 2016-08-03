@@ -3,7 +3,7 @@ defmodule BitFieldSet.Mixfile do
 
   def project do
     [app: :bit_field_set,
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.2",
      test_pattern: "*_{test,eqc}.exs",
      build_embedded: Mix.env == :prod,
@@ -33,7 +33,7 @@ defmodule BitFieldSet.Mixfile do
   end
 
   defp deps do
-    [{:eqc_ex, "~> 1.2.4"},
-     {:benchfella, "~> 0.3.1", only: :dev}]
+    [{:eqc_ex, "~> 1.3.0", only: [:test, :dev]},
+     {:benchfella, "~> 0.3.2", only: :dev}]
   end
 end
