@@ -244,6 +244,20 @@ defmodule BitFieldSet do
   end
 
   @doc """
+  Return true if the given set is empty and false otherwise.
+
+      iex> BitFieldSet.new!(<<0b00000000>>, 8) |> BitFieldSet.empty?
+      true
+
+      iex> BitFieldSet.new!(<<0b10101010>>, 8) |> BitFieldSet.empty?
+      false
+  """
+  @spec empty?(t) :: boolean
+  def empty?(%Set{pieces: pieces}) do
+    MapSet.size(pieces) == 0
+  end
+
+  @doc """
   Take a piece set and return the number of its available pieces.
 
       iex> BitFieldSet.new!(<<0b10101010>>, 8) |> BitFieldSet.has
