@@ -37,11 +37,9 @@ defmodule BitFieldSetEqc do
         empty = <<0::size(80)>>
         {:ok, set_a} = BitFieldSet.new(a <> empty, 160)
         {:ok, set_b} = BitFieldSet.new(empty <> b, 160)
-        result =
-          BitFieldSet.new!(a <> b, 160)
-          |> BitFieldSet.to_list
+        result = BitFieldSet.new!(a <> b, 160)
 
-        ensure Enum.sort(MapSet.to_list(BitFieldSet.union(set_a, set_b))) == result
+        ensure BitFieldSet.union(set_a, set_b) == result
       end
     end
   end
@@ -52,11 +50,9 @@ defmodule BitFieldSetEqc do
         empty = <<0::size(80)>>
         {:ok, set_a} = BitFieldSet.new(a <> empty <> c, 240)
         {:ok, set_b} = BitFieldSet.new(empty <> b <> c, 240)
-        result =
-          BitFieldSet.new!(empty <> empty <> c, 240)
-          |> BitFieldSet.to_list
+        result = BitFieldSet.new!(empty <> empty <> c, 240)
 
-        ensure Enum.sort(MapSet.to_list(BitFieldSet.intersection(set_a, set_b))) == result
+        ensure BitFieldSet.intersection(set_a, set_b) == result
       end
     end
   end
