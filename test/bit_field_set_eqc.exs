@@ -46,8 +46,34 @@ defmodule BitFieldSetEqc do
     end
   end
 
-  # describe "put/2" do ... end
   # describe "delete/2" do ... end
+  describe "put/2" do
+    property "small set" do
+      forall numbers <- list(choose(0, 15)) do
+        bit_field = BitFieldSet.new!(16)
+        result =
+          numbers
+          |> Enum.reduce(bit_field, &(BitFieldSet.put(&2, &1)))
+          |> BitFieldSet.to_list()
+        expected = numbers |> Enum.uniq() |> Enum.sort()
+
+        ensure expected == result
+      end
+    end
+
+    property "big set" do
+      forall numbers <- list(choose(0, 7999)) do
+        bit_field = BitFieldSet.new!(8000)
+        result =
+          numbers
+          |> Enum.reduce(bit_field, &(BitFieldSet.put(&2, &1)))
+          |> BitFieldSet.to_list()
+        expected = numbers |> Enum.uniq() |> Enum.sort()
+
+        ensure expected == result
+      end
+    end
+  end
 
   describe "disjoint?/2" do
     property "small set" do
