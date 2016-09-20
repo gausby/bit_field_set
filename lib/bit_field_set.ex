@@ -58,7 +58,7 @@ defmodule BitFieldSet do
     end
   end
 
-  # we use the tailing bits for the internal representation
+  # We don't use the tailing bits for the internal representation
   defp drop_tailing_bits(%__MODULE__{size: size} = bitfield)
   when rem(size, 8) == 0 do
     {:ok, bitfield}
