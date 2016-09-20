@@ -145,8 +145,12 @@ defmodule BitFieldSet do
   """
   @spec delete(t, piece_index) :: t
   def delete(%__MODULE__{pieces: pieces} = bitfield, piece_index) do
-    piece = get_piece_index(bitfield, piece_index)
-    %{bitfield|pieces: bxor(pieces, piece)}
+    if member?(bitfield, piece_index) do
+      piece = get_piece_index(bitfield, piece_index)
+      %{bitfield|pieces: pieces - piece}
+    else
+      bitfield
+    end
   end
 
 

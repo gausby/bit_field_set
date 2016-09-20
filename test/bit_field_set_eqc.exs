@@ -46,7 +46,6 @@ defmodule BitFieldSetEqc do
     end
   end
 
-  # describe "delete/2" do ... end
   describe "put/2" do
     property "small set" do
       forall numbers <- list(choose(0, 15)) do
@@ -71,6 +70,25 @@ defmodule BitFieldSetEqc do
         expected = numbers |> Enum.uniq() |> Enum.sort()
 
         ensure expected == result
+      end
+    end
+  end
+
+  describe "delete/2" do
+    property "small set" do
+      forall {add, remove} <- {list(choose(0, 15)), list(choose(0, 15))} do
+        expected =
+          remove
+          |> Enum.reduce(add, &(Enum.reject(&2, fn ^&1 -> true; _ -> false end)))
+          |> Enum.sort()
+
+        bit_field = Enum.into(add, %BitFieldSet{size: 16})
+        result =
+          remove
+          |> Enum.reduce(bit_field, &(BitFieldSet.delete(&2, &1)))
+          |> BitFieldSet.to_list()
+
+        ensure Enum.uniq(expected) == result
       end
     end
   end
