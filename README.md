@@ -10,7 +10,7 @@ Store and manipulate a set of bit flags, mostly used for syncing the state over 
 
 ```elixir
 # Create a new bit field set with the new command.
-# (initial content, size in bits, an optional info hash)
+# (initial content, and size in bits)
 bitfield = BitFieldSet.new!(<<0b00110001>>, 8)
 # => #BitFieldSet<[2, 3, 7]>
 
