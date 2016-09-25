@@ -179,16 +179,31 @@ defmodule BitFieldSet do
   Take a bit field set and return `true` if the set contains all the
   pieces, and `false` otherwise.
 
-      iex> BitFieldSet.new!(<<0b10011010>>, 8) |> BitFieldSet.is_full?()
+      iex> BitFieldSet.new!(<<0b10011010>>, 8) |> BitFieldSet.full?()
       false
-      iex> BitFieldSet.new!(<<0b11111111>>, 8) |> BitFieldSet.is_full?()
+      iex> BitFieldSet.new!(<<0b11111111>>, 8) |> BitFieldSet.full?()
       true
 
   """
-  @spec is_full?(t) :: boolean
-  def is_full?(%__MODULE__{pieces: pieces, size: size}) do
+  @spec full?(t) :: boolean
+  def full?(%__MODULE__{pieces: pieces, size: size}) do
     pieces == (1 <<< size) - 1
   end
+
+
+  @doc """
+  Take a bit field set and return `true` if the set contains no
+  pieces, and `false` otherwise.
+
+      iex> BitFieldSet.new!(<<0b11111111>>, 8) |> BitFieldSet.empty?()
+      false
+      iex> BitFieldSet.new!(<<0b00000000>>, 8) |> BitFieldSet.empty?()
+      true
+
+  """
+  @spec empty?(t) :: boolean
+  def empty?(%__MODULE__{pieces: 0}), do: true
+  def empty?(%__MODULE__{}), do: false
 
 
   @doc """

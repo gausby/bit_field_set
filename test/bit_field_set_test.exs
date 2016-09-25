@@ -138,10 +138,17 @@ defmodule BitFieldSetTest do
   end
 
   test "is full?" do
-    assert BitFieldSet.is_full?(%BitFieldSet{size: 8, pieces: 0b11111111})
-    refute BitFieldSet.is_full?(%BitFieldSet{size: 8, pieces: 0b11111110})
-    refute BitFieldSet.is_full?(%BitFieldSet{size: 16, pieces: 0b1111111100000001})
-    assert BitFieldSet.is_full?(%BitFieldSet{size: 16, pieces: 0b1111111111111111})
+    assert BitFieldSet.full?(%BitFieldSet{size: 8, pieces: 0b11111111})
+    refute BitFieldSet.full?(%BitFieldSet{size: 8, pieces: 0b11111110})
+    refute BitFieldSet.full?(%BitFieldSet{size: 16, pieces: 0b1111111100000001})
+    assert BitFieldSet.full?(%BitFieldSet{size: 16, pieces: 0b1111111111111111})
+  end
+
+  test "is empty?" do
+    assert BitFieldSet.empty?(%BitFieldSet{size: 8, pieces: 0})
+    refute BitFieldSet.empty?(%BitFieldSet{size: 8, pieces: 0b11111111})
+    refute BitFieldSet.empty?(%BitFieldSet{size: 16, pieces: 0b1111111100000001})
+    assert BitFieldSet.empty?(%BitFieldSet{size: 16, pieces: 0})
   end
 
   test "get available pieces for a bit-field as a list" do
