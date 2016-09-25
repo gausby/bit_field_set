@@ -11,17 +11,18 @@ Store and manipulate a set of bit flags, mostly used for syncing the state over 
 ```elixir
 # Create a new bit field set with the new command.
 # (initial content, size in bits, an optional info hash)
-bitfield = BitFieldSet.new!(<<0b00110001>>, 8, "my_info_hash")
-# => %BitFieldSet{info_hash: "my_info_hash", pieces: #MapSet<[2, 3, 7]>, size: 8}
+bitfield = BitFieldSet.new!(<<0b00110001>>, 8)
+# => #BitFieldSet<[2, 3, 7]>
 
 # set the first bit
-bitfield = BitFieldSet.set(bitfield, 0)
-# => %BitFieldSet{info_hash: "my_info_hash", pieces: #MapSet<[0, 2, 3, 7]>, size: 8}
+bitfield = BitFieldSet.put(bitfield, 0)
+# => #BitFieldSet<[0, 2, 3, 7]>
 
-bitfield = BitFieldSet.remove(bitfield, 3)
-# => %BitFieldSet{info_hash: "my_info_hash", pieces: #MapSet<[0, 2, 7]>, size: 8}
+bitfield = BitFieldSet.delete(bitfield, 3)
+# => #BitFieldSet<[0, 2, 7]>
 
-BitFieldSet.to_binary(bitfield) # => <<161>>
+BitFieldSet.to_binary(bitfield)
+# => <<161>>
 ```
 
 
@@ -31,7 +32,7 @@ Bit Field Set is [available in Hex](https://hex.pm/packages/bit_field_set), the 
 
 ``` elixir
 def deps do
-  [{:bit_field_set, "~> 0.1.0"}]
+  [{:bit_field_set, "~> 1.1.0"}]
 end
 ```
 
