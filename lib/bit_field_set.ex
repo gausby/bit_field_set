@@ -29,7 +29,8 @@ defmodule BitFieldSet do
   @spec new(binary, size) :: {:ok, t} | {:error, errors}
   def new(data \\ <<>>, size)
   def new(<<>>, size), do: {:ok, %__MODULE__{size: size, pieces: 0}}
-  def new(data, size) when bit_size(data) - size < 8 do
+  def new(_, size) when size <= 0, do: {:error, :bit_field_size_too_small}
+  def new(data, size) when is_binary(data) and bit_size(data) - size < 8 do
     actual_size = bitfield_size(size)
     <<pieces::big-size(actual_size)>> = data
 
@@ -38,6 +39,12 @@ defmodule BitFieldSet do
          {:ok, bitfield} <- drop_tailing_bits(bitfield) do
       {:ok, bitfield}
     end
+  end
+  def new(data, size) when is_bitstring(data) and bit_size(data) - size < 8 do
+    data_size = bit_size(data)
+    <<pieces::integer-size(data_size)>> = data
+    bitfield = %__MODULE__{size: size, pieces: pieces}
+    {:ok, bitfield}
   end
   def new(_content, _size), do: {:error, :out_of_bounds}
 
