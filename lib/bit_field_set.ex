@@ -361,12 +361,15 @@ defmodule BitFieldSet do
     (div(size, 8) + tail) * 8
   end
 
-  # count the 'on' bits in the bit field
+  # We use Brian Kernighan's Algorithm to count the 'on' bits in the
+  # bit field. It works by subtracting one from the current integer
+  # value and returning the BINARY AND of that and the current value.
+  # This will effectively remove the current least significant bit, so
+  # it is just a matter of counting the times we can do that before
+  # reaching zero
   defp count_enabled_bits(0, acc), do: acc
-  defp count_enabled_bits(pieces, acc) do
-    # check if the least significant bit is a 1 and increment the
-    # accumulator if so; then shift the pieces and recurse
-    count_enabled_bits(pieces >>> 1, acc + (pieces &&& 1))
+  defp count_enabled_bits(n, acc) do
+    count_enabled_bits(band(n, n - 1), acc + 1)
   end
 
   # return bits present in a that is not present in b

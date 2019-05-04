@@ -5,6 +5,8 @@ defmodule BitFieldSetBench do
   @half_full IO.iodata_to_binary(for _ <- 1..1000, do: 170)
   @full IO.iodata_to_binary(for _ <- 1..1000, do: 255)
 
+  @half_full_set BitFieldSet.new!(@half_full, 8000)
+
   # all bits set to 0
   bench "empty-bitfield" do
     BitFieldSet.new!(@empty, 8000)
@@ -18,5 +20,9 @@ defmodule BitFieldSetBench do
   # every bit set to 1
   bench "full-bitfield" do
     BitFieldSet.new!(@full, 8000)
+  end
+
+  bench "count set bits" do
+    BitFieldSet.size(@half_full_set) == 4000
   end
 end
