@@ -235,7 +235,7 @@ defmodule BitFieldSet do
   @spec difference(t, t) :: t
   def difference(%__MODULE__{size: size, pieces: a} = bitfield,
                  %__MODULE__{size: size, pieces: b}) do
-    %{bitfield|pieces: filter_not_in(a, b, 0, 0)}
+    %{bitfield | pieces: band(a, band(b, a) |> bnot())}
   end
 
 
@@ -389,21 +389,6 @@ defmodule BitFieldSet do
   defp count_enabled_bits(0, acc), do: acc
   defp count_enabled_bits(n, acc) do
     count_enabled_bits(band(n, n - 1), acc + 1)
-  end
-
-  # return bits present in a that is not present in b
-  defp filter_not_in(0, _, _, acc), do: acc
-  defp filter_not_in(a, b, counter, acc) do
-    in_a? = band(a, 1) == 1
-    in_b? = band(b, 1) == 1
-    acc =
-      if in_a? and not in_b? do
-        acc + (1 <<< counter)
-      else
-        acc
-      end
-
-    filter_not_in(a >>> 1, b >>> 1, counter + 1, acc)
   end
 
 
