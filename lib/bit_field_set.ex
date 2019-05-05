@@ -5,7 +5,7 @@ defmodule BitFieldSet do
 
   @type piece_index :: non_neg_integer
   @type size :: non_neg_integer
-  @type errors :: :out_of_bounds
+  @type errors :: :out_of_bounds | :bit_field_size_too_small
 
   @opaque t :: %__MODULE__{size: size, pieces: non_neg_integer}
   defstruct size: 0, pieces: 0
