@@ -7,8 +7,8 @@ defmodule BitFieldSetEqc do
     property "converting data to a bit field set and back should yield the same result" do
       forall input <- binary() do
         size = bit_size(input)
-        result = input |> BitFieldSet.new!(size) |> BitFieldSet.to_binary
-        ensure result == input
+        result = input |> BitFieldSet.new!(size) |> BitFieldSet.to_binary()
+        ensure(result == input)
       end
     end
 
@@ -16,33 +16,34 @@ defmodule BitFieldSetEqc do
       forall {size, a} <- gen_random_set() do
         result = a |> BitFieldSet.new!(size) |> BitFieldSet.to_list()
         expected = a |> convert_to_map_set(size) |> MapSet.to_list()
-        ensure Enum.sort(expected) == result
+        ensure(Enum.sort(expected) == result)
       end
     end
 
     property "collectable protocol" do
       forall {size, a} <- gen_random_set() do
         bit_field = BitFieldSet.new!(a, size)
+
         result =
           bit_field
           |> BitFieldSet.to_list()
           |> Enum.into(%BitFieldSet{size: size})
 
-        ensure result == bit_field
+        ensure(result == bit_field)
       end
     end
   end
 
-
   property "put/2" do
     forall {size, numbers} <- gen_random_set_of_numbers() do
       bit_field = BitFieldSet.new!(size + 1)
+
       result =
         numbers
-        |> Enum.reduce(bit_field, &(BitFieldSet.put(&2, &1)))
+        |> Enum.reduce(bit_field, &BitFieldSet.put(&2, &1))
         |> BitFieldSet.to_list()
 
-      ensure Enum.dedup(numbers) == result
+      ensure(Enum.dedup(numbers) == result)
     end
   end
 
@@ -52,24 +53,29 @@ defmodule BitFieldSetEqc do
     end
   end
 
-
   property "delete/2" do
     forall {add, remove} <- {orderedlist(choose(0, 15)), orderedlist(choose(0, 15))} do
       expected =
         remove
-        |> Enum.reduce(add, &(Enum.reject(&2, fn ^&1 -> true; _ -> false end)))
+        |> Enum.reduce(
+          add,
+          &Enum.reject(&2, fn
+            ^&1 -> true
+            _ -> false
+          end)
+        )
         |> Enum.dedup()
 
       bit_field = Enum.into(add, %BitFieldSet{size: 16})
+
       result =
         remove
-        |> Enum.reduce(bit_field, &(BitFieldSet.delete(&2, &1)))
+        |> Enum.reduce(bit_field, &BitFieldSet.delete(&2, &1))
         |> BitFieldSet.to_list()
 
-      ensure expected == result
+      ensure(expected == result)
     end
   end
-
 
   # todo, make sure some tests are guaranteed disjoined
   property "disjoint?/2" do
@@ -83,10 +89,9 @@ defmodule BitFieldSetEqc do
       expected = MapSet.disjoint?(map_set_a, map_set_b)
       result = BitFieldSet.disjoint?(bit_field_a, bit_field_b)
 
-      ensure expected == result
+      ensure(expected == result)
     end
   end
-
 
   property "difference/2" do
     forall {size, a, b} <- gen_two_random_sets_of_same_size() do
@@ -105,10 +110,9 @@ defmodule BitFieldSetEqc do
         BitFieldSet.difference(bit_field_a, bit_field_b)
         |> BitFieldSet.to_list()
 
-      ensure expected == result
+      ensure(expected == result)
     end
   end
-
 
   property "intersection/2" do
     forall {size, a, b} <- gen_two_random_sets_of_same_size() do
@@ -127,10 +131,9 @@ defmodule BitFieldSetEqc do
         BitFieldSet.intersection(bit_field_a, bit_field_b)
         |> BitFieldSet.to_list()
 
-      ensure expected == result
+      ensure(expected == result)
     end
   end
-
 
   property "union/2" do
     forall {size, a, b} <- gen_two_random_sets_of_same_size() do
@@ -149,10 +152,9 @@ defmodule BitFieldSetEqc do
         BitFieldSet.union(bit_field_a, bit_field_b)
         |> BitFieldSet.to_list()
 
-      ensure expected == result
+      ensure(expected == result)
     end
   end
-
 
   property "equal?/2" do
     # todo, should generate two sets that are equal once in a while
@@ -166,10 +168,9 @@ defmodule BitFieldSetEqc do
       expected = MapSet.equal?(map_set_a, map_set_b)
       result = BitFieldSet.equal?(bit_field_a, bit_field_b)
 
-      ensure expected == result
+      ensure(expected == result)
     end
   end
-
 
   property "subset?/2" do
     forall {size, a, b} <- gen_maybe_subset() do
@@ -182,7 +183,7 @@ defmodule BitFieldSetEqc do
       expected = MapSet.subset?(map_set_a, map_set_b)
       result = BitFieldSet.subset?(bit_field_a, bit_field_b)
 
-      ensure expected == result
+      ensure(expected == result)
     end
   end
 
@@ -195,15 +196,13 @@ defmodule BitFieldSetEqc do
     end
   end
 
-
   property "size/2" do
     forall {size, a} <- gen_random_set() do
       expected = a |> convert_to_map_set(size) |> MapSet.size()
       result = a |> BitFieldSet.new!(size) |> BitFieldSet.size()
-      ensure expected == result
+      ensure(expected == result)
     end
   end
-
 
   property "member?/2" do
     forall {size, haystack, needle} <- gen_haystack_and_needle() do
@@ -218,7 +217,7 @@ defmodule BitFieldSetEqc do
           |> BitFieldSet.new!(size)
           |> BitFieldSet.member?(needle)
 
-        ensure expected == result
+        ensure(expected == result)
       end
     end
   end
@@ -233,8 +232,7 @@ defmodule BitFieldSetEqc do
     end
   end
 
-
-  #=Generators =========================================================
+  # =Generators =========================================================
   defp gen_random_set() do
     sized size do
       {size, bitstring(size)}
@@ -247,8 +245,7 @@ defmodule BitFieldSetEqc do
     end
   end
 
-
-  #=Helpers ============================================================
+  # =Helpers ============================================================
   defp convert_to_map_set(data, set_size) when is_bitstring(data) do
     data_size = bit_size(data)
     <<bit_field::big-size(data_size)>> = data
@@ -261,12 +258,12 @@ defmodule BitFieldSetEqc do
       |> Integer.digits(2)
       |> Enum.reverse()
       |> Enum.reduce({bit_size - 1, []}, fn
-           (0, {counter, acc}) ->
-             {counter - 1, acc}
+        0, {counter, acc} ->
+          {counter - 1, acc}
 
-           (1, {counter, acc}) ->
-             {counter - 1, [counter|acc]}
-         end)
+        1, {counter, acc} ->
+          {counter - 1, [counter | acc]}
+      end)
 
     Enum.into(acc, MapSet.new())
   end

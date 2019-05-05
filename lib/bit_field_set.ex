@@ -30,6 +30,7 @@ defmodule BitFieldSet do
   def new(data \\ <<>>, size)
   def new(<<>>, size), do: {:ok, %__MODULE__{size: size, pieces: 0}}
   def new(_, size) when size <= 0, do: {:error, :bit_field_size_too_small}
+
   def new(data, size) when is_binary(data) and bit_size(data) - size < 8 do
     actual_size = bitfield_size(size)
     <<pieces::big-size(actual_size)>> = data
@@ -40,24 +41,28 @@ defmodule BitFieldSet do
       {:ok, bitfield}
     end
   end
+
   def new(data, size) when is_bitstring(data) and bit_size(data) - size < 8 do
     data_size = bit_size(data)
     <<pieces::integer-size(data_size)>> = data
     bitfield = %__MODULE__{size: size, pieces: pieces}
     {:ok, bitfield}
   end
+
   def new(_content, _size), do: {:error, :out_of_bounds}
 
   # Trailing bits should never be set. They can occur if the bit
   # field set it not divisible by eight. If they are set we should
   # throw an error.
   defp validate_trailing_bits(%__MODULE__{size: size} = bitfield)
-  when rem(size, 8) == 0 do
+       when rem(size, 8) == 0 do
     {:ok, bitfield}
   end
+
   defp validate_trailing_bits(%__MODULE__{} = bitfield) do
     tailing_bits = bitfield_size(bitfield) - bitfield.size
     tailing_bit_mask = (1 <<< tailing_bits) - 1
+
     if band(bitfield.pieces, tailing_bit_mask) == 0 do
       {:ok, bitfield}
     else
@@ -67,14 +72,14 @@ defmodule BitFieldSet do
 
   # We don't use the tailing bits for the internal representation
   defp drop_tailing_bits(%__MODULE__{size: size} = bitfield)
-  when rem(size, 8) == 0 do
+       when rem(size, 8) == 0 do
     {:ok, bitfield}
   end
+
   defp drop_tailing_bits(bitfield) do
     tailing_bits = bitfield_size(bitfield) - bitfield.size
-    {:ok, %{bitfield|pieces: bitfield.pieces >>> tailing_bits}}
+    {:ok, %{bitfield | pieces: bitfield.pieces >>> tailing_bits}}
   end
-
 
   @doc """
   Like `new/2` but will throw an error on initialization failure
@@ -84,7 +89,6 @@ defmodule BitFieldSet do
     {:ok, set} = new(content, size)
     set
   end
-
 
   @doc """
   Takes two bit field sets of the same size, and return `true` if both
@@ -100,10 +104,13 @@ defmodule BitFieldSet do
 
   """
   @spec equal?(t, t) :: boolean
-  def equal?(%__MODULE__{size: size, pieces: pieces},
-             %__MODULE__{size: size, pieces: pieces}), do: true
-  def equal?(_, _), do: false
+  def equal?(
+        %__MODULE__{size: size, pieces: pieces},
+        %__MODULE__{size: size, pieces: pieces}
+      ),
+      do: true
 
+  def equal?(_, _), do: false
 
   @doc """
   Takes a bit field set and a piece number and return `true` if the
@@ -122,7 +129,6 @@ defmodule BitFieldSet do
     band(bitfield.pieces, piece) != 0
   end
 
-
   @doc """
   Take a bit field set and an piece index and add it to the bit
   field. The updated piece set will get returned:
@@ -134,11 +140,10 @@ defmodule BitFieldSet do
   """
   @spec put(t, piece_index) :: t
   def put(%__MODULE__{size: size, pieces: pieces} = bitfield, piece_index)
-  when piece_index < size do
+      when piece_index < size do
     piece = get_piece_index(bitfield, piece_index)
-    %{bitfield|pieces: bor(pieces, piece)}
+    %{bitfield | pieces: bor(pieces, piece)}
   end
-
 
   @doc """
   Take a bit field set and an index. The given index will get removed
@@ -153,9 +158,8 @@ defmodule BitFieldSet do
   @spec delete(t, piece_index) :: t
   def delete(%__MODULE__{pieces: pieces} = bitfield, piece_index) do
     piece = get_piece_index(bitfield, piece_index)
-    %{bitfield|pieces: band(pieces, bnot(piece))}
+    %{bitfield | pieces: band(pieces, bnot(piece))}
   end
-
 
   @doc """
   Set all the bits to on in the bit field set.
@@ -167,9 +171,8 @@ defmodule BitFieldSet do
   """
   @spec fill(t) :: t
   def fill(%__MODULE__{size: size} = bitfield) do
-    %{bitfield|pieces: (1 <<< size) - 1}
+    %{bitfield | pieces: (1 <<< size) - 1}
   end
-
 
   @doc """
   Take a bit field set and return `true` if the set contains all the
@@ -186,7 +189,6 @@ defmodule BitFieldSet do
     pieces == (1 <<< size) - 1
   end
 
-
   @doc """
   Take a bit field set and return `true` if the set contains no
   pieces, and `false` otherwise.
@@ -201,7 +203,6 @@ defmodule BitFieldSet do
   def empty?(%__MODULE__{pieces: 0}), do: true
   def empty?(%__MODULE__{}), do: false
 
-
   @doc """
   Takes two bit field sets of the same size and return a set
   containing the pieces that belong to both sets.
@@ -213,11 +214,12 @@ defmodule BitFieldSet do
 
   """
   @spec intersection(t, t) :: t
-  def intersection(%__MODULE__{size: size, pieces: a} = bitfield,
-                   %__MODULE__{size: size, pieces: b}) do
-    %{bitfield|pieces: band(b, a)}
+  def intersection(
+        %__MODULE__{size: size, pieces: a} = bitfield,
+        %__MODULE__{size: size, pieces: b}
+      ) do
+    %{bitfield | pieces: band(b, a)}
   end
-
 
   @doc """
   Takes two bit field sets, a and b, who both of the same size, and
@@ -233,11 +235,12 @@ defmodule BitFieldSet do
 
   """
   @spec difference(t, t) :: t
-  def difference(%__MODULE__{size: size, pieces: a} = bitfield,
-                 %__MODULE__{size: size, pieces: b}) do
+  def difference(
+        %__MODULE__{size: size, pieces: a} = bitfield,
+        %__MODULE__{size: size, pieces: b}
+      ) do
     %{bitfield | pieces: band(a, band(b, a) |> bnot())}
   end
-
 
   @doc """
   Takes two bit field sets of the same size and returns a set
@@ -250,11 +253,12 @@ defmodule BitFieldSet do
 
   """
   @spec union(t, t) :: t
-  def union(%__MODULE__{size: size, pieces: a} = bitfield,
-            %__MODULE__{size: size, pieces: b}) do
-    %{bitfield|pieces: bor(a, b)}
+  def union(
+        %__MODULE__{size: size, pieces: a} = bitfield,
+        %__MODULE__{size: size, pieces: b}
+      ) do
+    %{bitfield | pieces: bor(a, b)}
   end
-
 
   @doc """
   Takes two bit field sets, a and b, who has the same size, and return
@@ -270,11 +274,12 @@ defmodule BitFieldSet do
 
   """
   @spec subset?(t, t) :: boolean
-  def subset?(%__MODULE__{size: size, pieces: a},
-              %__MODULE__{size: size, pieces: b}) do
+  def subset?(
+        %__MODULE__{size: size, pieces: a},
+        %__MODULE__{size: size, pieces: b}
+      ) do
     band(b, a) == a
   end
-
 
   @doc """
   Takes two bit field sets and return `true` if the two bit fields
@@ -290,11 +295,12 @@ defmodule BitFieldSet do
 
   """
   @spec disjoint?(t, t) :: boolean
-  def disjoint?(%__MODULE__{pieces: a, size: size},
-                %__MODULE__{pieces: b, size: size}) do
+  def disjoint?(
+        %__MODULE__{pieces: a, size: size},
+        %__MODULE__{pieces: b, size: size}
+      ) do
     band(b, a) == 0
   end
-
 
   @doc """
   Take a bit field set and return the number of its available pieces.
@@ -307,7 +313,6 @@ defmodule BitFieldSet do
   def size(%__MODULE__{pieces: pieces}) do
     count_enabled_bits(pieces, 0)
   end
-
 
   @doc """
   Takes a bit field set and returns a binary representation of the set.
@@ -325,7 +330,6 @@ defmodule BitFieldSet do
     <<bitfield::big-size(byte_size)>>
   end
 
-
   @doc """
   Take a bit field set and returns the available pieces as a list.
 
@@ -335,6 +339,7 @@ defmodule BitFieldSet do
   """
   @spec to_list(t) :: [piece_index]
   def to_list(%__MODULE__{pieces: 0, size: _}), do: []
+
   def to_list(%__MODULE__{pieces: pieces, size: size}) do
     # `:math.log2/1` does not support numbers bigger than 1024 bits;
     # so we need to split the number up if the number is bigger
@@ -362,6 +367,7 @@ defmodule BitFieldSet do
   end
 
   defp do_chunk_to_list(0, _, acc), do: acc
+
   defp do_chunk_to_list(n, offset, acc) do
     next = band(n, n - 1)
     position_of_least_significant = :erlang.trunc(:math.log2(band(n, -n)) + 1)
@@ -375,8 +381,9 @@ defmodule BitFieldSet do
 
   # calculate the size of the bit field in bytes (divisible by 8)
   defp bitfield_size(%__MODULE__{size: size}), do: bitfield_size(size)
+
   defp bitfield_size(size) when is_integer(size) do
-    tail = if (rem(size, 8) != 0), do: 1, else: 0
+    tail = if rem(size, 8) != 0, do: 1, else: 0
     (div(size, 8) + tail) * 8
   end
 
@@ -387,10 +394,10 @@ defmodule BitFieldSet do
   # it is just a matter of counting the times we can do that before
   # reaching zero
   defp count_enabled_bits(0, acc), do: acc
+
   defp count_enabled_bits(n, acc) do
     count_enabled_bits(band(n, n - 1), acc + 1)
   end
-
 
   # protocols ==========================================================
   defimpl Enumerable do
@@ -398,7 +405,7 @@ defmodule BitFieldSet do
       Enumerable.List.reduce(BitFieldSet.to_list(source), acc, fun)
     end
 
-    def member?(source , value) do
+    def member?(source, value) do
       {:ok, BitFieldSet.member?(source, value)}
     end
 
@@ -409,16 +416,17 @@ defmodule BitFieldSet do
 
   defimpl Collectable do
     def into(original) do
-      {original, fn
-        acc, {:cont, value} ->
-          BitFieldSet.put(acc, value)
+      {original,
+       fn
+         acc, {:cont, value} ->
+           BitFieldSet.put(acc, value)
 
-        acc, :done ->
-          acc
+         acc, :done ->
+           acc
 
-        _, :halt ->
-          :ok
-      end}
+         _, :halt ->
+           :ok
+       end}
     end
   end
 
@@ -426,8 +434,8 @@ defmodule BitFieldSet do
     import Inspect.Algebra
 
     def inspect(source, opts) do
-      opts = %Inspect.Opts{opts|charlists: :as_lists}
-      concat ["#BitFieldSet<", Inspect.List.inspect(BitFieldSet.to_list(source), opts), ">"]
+      opts = %Inspect.Opts{opts | charlists: :as_lists}
+      concat(["#BitFieldSet<", Inspect.List.inspect(BitFieldSet.to_list(source), opts), ">"])
     end
   end
 end

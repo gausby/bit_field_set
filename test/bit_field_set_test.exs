@@ -25,28 +25,29 @@ defmodule BitFieldSetTest do
     assert [0] = BitFieldSet.to_list(BitFieldSet.new!(<<128, 0>>, 15))
   end
 
-
   test "bit fields should throw an error if bits are out of bounds" do
     assert {:error, :out_of_bounds} = BitFieldSet.new(<<128, 64, 32, 48, 129>>, 33)
     assert {:error, :out_of_bounds} = BitFieldSet.new(<<0::size(120)>>, 33)
   end
 
   test "turning a bitfield into a binary" do
-    cases =
-      [<<74, 0, 0>>,
-       <<0, 74, 0>>,
-       <<0, 0, 74>>,
-       <<1, 255, 74>>]
+    cases = [<<74, 0, 0>>, <<0, 74, 0>>, <<0, 0, 74>>, <<1, 255, 74>>]
+
     for bin <- cases do
       size = bit_size(bin)
       <<pieces::big-size(size)>> = bin
       assert ^bin = BitFieldSet.to_binary(%BitFieldSet{size: size, pieces: pieces})
     end
 
-    assert <<0b10000000, 0, 0>> = BitFieldSet.to_binary(%BitFieldSet{size: 22, pieces: 0b1000000000000000000000})
-    assert <<0b10000000, 0, 0>> = BitFieldSet.to_binary(%BitFieldSet{size: 24, pieces: 0b100000000000000000000000})
+    assert <<0b10000000, 0, 0>> =
+             BitFieldSet.to_binary(%BitFieldSet{size: 22, pieces: 0b1000000000000000000000})
 
-    assert <<255, 255, 252>> = BitFieldSet.to_binary(%BitFieldSet{size: 23, pieces: 0b111111111111111111111110})
+    assert <<0b10000000, 0, 0>> =
+             BitFieldSet.to_binary(%BitFieldSet{size: 24, pieces: 0b100000000000000000000000})
+
+    assert <<255, 255, 252>> =
+             BitFieldSet.to_binary(%BitFieldSet{size: 23, pieces: 0b111111111111111111111110})
+
     assert <<128, 0>> = BitFieldSet.to_binary(%BitFieldSet{size: 12, pieces: 0b100000000000})
   end
 
@@ -93,33 +94,33 @@ defmodule BitFieldSetTest do
 
   test "setting all bits using fill/1" do
     assert %BitFieldSet{size: 8, pieces: 0b11111111} =
-      BitFieldSet.fill(%BitFieldSet{size: 8, pieces: 0})
+             BitFieldSet.fill(%BitFieldSet{size: 8, pieces: 0})
 
     assert %BitFieldSet{size: 8, pieces: 0b11111111} =
-      BitFieldSet.fill(%BitFieldSet{size: 8, pieces: 0b11100100})
+             BitFieldSet.fill(%BitFieldSet{size: 8, pieces: 0b11100100})
 
-    <<pieces::big-size(120)>> = <<255, 255, 255, 255, 255,
-                                  255, 255, 255, 255, 255,
-                                  255, 255, 255, 255, 255>>
+    <<pieces::big-size(120)>> =
+      <<255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255>>
+
     assert %BitFieldSet{size: 120, pieces: ^pieces} =
-      BitFieldSet.fill(%BitFieldSet{size: 120, pieces: 0})
+             BitFieldSet.fill(%BitFieldSet{size: 120, pieces: 0})
 
     assert %BitFieldSet{size: 1, pieces: 0b00000001} =
-      BitFieldSet.fill(%BitFieldSet{size: 1, pieces: 0})
+             BitFieldSet.fill(%BitFieldSet{size: 1, pieces: 0})
 
     assert %BitFieldSet{size: 17, pieces: 0b11111111111111111} =
-      BitFieldSet.fill(%BitFieldSet{size: 17, pieces: 0})
+             BitFieldSet.fill(%BitFieldSet{size: 17, pieces: 0})
   end
 
   test "removing bits" do
     assert %BitFieldSet{size: 8, pieces: 0} =
-      BitFieldSet.delete(%BitFieldSet{size: 8, pieces: 0b00100000}, 2)
+             BitFieldSet.delete(%BitFieldSet{size: 8, pieces: 0b00100000}, 2)
 
     assert %BitFieldSet{size: 8, pieces: 0b101010} =
-      BitFieldSet.delete(%BitFieldSet{size: 8, pieces: 0b10101010}, 0)
+             BitFieldSet.delete(%BitFieldSet{size: 8, pieces: 0b10101010}, 0)
 
     assert %BitFieldSet{size: 8, pieces: 0b10100010} =
-      BitFieldSet.delete(%BitFieldSet{size: 8, pieces: 0b10101010}, 4)
+             BitFieldSet.delete(%BitFieldSet{size: 8, pieces: 0b10101010}, 4)
   end
 
   test "counting the number of available pieces in a bitfield" do
@@ -176,10 +177,10 @@ defmodule BitFieldSetTest do
     bitfield2 = %BitFieldSet{size: 16, pieces: 0b0110101010111110}
 
     assert %BitFieldSet{size: 16, pieces: 0b0010101000101010} =
-      BitFieldSet.intersection(bitfield1, bitfield2)
+             BitFieldSet.intersection(bitfield1, bitfield2)
 
     assert %BitFieldSet{size: 16, pieces: 0b0010101000101010} =
-      BitFieldSet.intersection(bitfield2, bitfield1)
+             BitFieldSet.intersection(bitfield2, bitfield1)
   end
 
   test "difference" do
