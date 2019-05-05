@@ -239,7 +239,7 @@ defmodule BitFieldSet do
         %__MODULE__{size: size, pieces: a} = bitfield,
         %__MODULE__{size: size, pieces: b}
       ) do
-    %{bitfield | pieces: band(a, band(b, a) |> bnot())}
+    %{bitfield | pieces: band(a, bnot(b))}
   end
 
   @doc """
