@@ -59,11 +59,11 @@ defmodule BitFieldSet do
     {:ok, bitfield}
   end
 
-  defp validate_trailing_bits(%__MODULE__{} = bitfield) do
-    tailing_bits = bitfield_size(bitfield) - bitfield.size
+  defp validate_trailing_bits(%__MODULE__{size: size, pieces: pieces} = bitfield) do
+    tailing_bits = bitfield_size(bitfield) - size
     tailing_bit_mask = (1 <<< tailing_bits) - 1
 
-    if band(bitfield.pieces, tailing_bit_mask) == 0 do
+    if band(pieces, tailing_bit_mask) == 0 do
       {:ok, bitfield}
     else
       {:error, :out_of_bounds}
@@ -76,9 +76,9 @@ defmodule BitFieldSet do
     {:ok, bitfield}
   end
 
-  defp drop_tailing_bits(bitfield) do
-    tailing_bits = bitfield_size(bitfield) - bitfield.size
-    {:ok, %{bitfield | pieces: bitfield.pieces >>> tailing_bits}}
+  defp drop_tailing_bits(%__MODULE__{size: size, pieces: pieces} = bitfield) do
+    tailing_bits = bitfield_size(bitfield) - size
+    {:ok, %{bitfield | pieces: pieces >>> tailing_bits}}
   end
 
   @doc """
@@ -124,9 +124,9 @@ defmodule BitFieldSet do
 
   """
   @spec member?(t, piece_index) :: boolean
-  def member?(%__MODULE__{} = bitfield, piece_index) do
+  def member?(%__MODULE__{pieces: pieces} = bitfield, piece_index) do
     piece = get_piece_index(bitfield, piece_index)
-    band(bitfield.pieces, piece) != 0
+    band(pieces, piece) != 0
   end
 
   @doc """
