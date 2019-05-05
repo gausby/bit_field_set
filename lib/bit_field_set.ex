@@ -338,18 +338,41 @@ defmodule BitFieldSet do
 
   """
   @spec to_list(t) :: [piece_index]
+  def to_list(%__MODULE__{pieces: 0, size: _}), do: []
   def to_list(%__MODULE__{pieces: pieces, size: size}) do
-    do_to_list(pieces, size - 1, [])
+    # `:math.log2/1` does not support numbers bigger than 1024 bits;
+    # so we need to split the number up if the number is bigger
+    chunk(<<pieces::integer-size(size)>>, 1024)
+    |> List.flatten()
   end
 
+  defp chunk(data, step_size, offset \\ 0) do
+    case data do
+      <<>> ->
+        []
+
+      <<head::integer-size(step_size), remaining::bitstring>> ->
+        offset = offset + step_size
+        # note; body recursive because we will hit other limitations
+        # before blowing the call stack
+        [do_chunk_to_list(head, offset, []) | chunk(remaining, step_size, offset)]
+
+      <<remainder::bitstring>> ->
+        remainder_size = bit_size(remainder)
+        offset = offset + remainder_size
+        <<remainder::integer-size(remainder_size)>> = remainder
+        [do_chunk_to_list(remainder, offset, [])]
+    end
+  end
+
+  defp do_chunk_to_list(0, _, acc), do: acc
+  defp do_chunk_to_list(n, offset, acc) do
+    next = band(n, n - 1)
+    position_of_least_significant = :erlang.trunc(:math.log2(band(n, -n)) + 1)
+    do_chunk_to_list(next, offset, [offset - position_of_least_significant | acc])
+  end
 
   # helpers ============================================================
-  defp do_to_list(0, _, acc), do: acc
-  defp do_to_list(pieces, piece_index, acc) do
-    acc = if (pieces &&& 1) == 0, do: acc, else: [piece_index|acc]
-    do_to_list(pieces >>> 1, piece_index - 1, acc)
-  end
-
   defp get_piece_index(%__MODULE__{size: size}, piece_index) do
     1 <<< (size - (piece_index + 1))
   end
